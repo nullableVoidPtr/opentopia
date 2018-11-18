@@ -1,0 +1,175 @@
+<html>
+	<head>
+		<script type="module">
+			import Map, {Building, Tile, TileResult} from "./map.js";
+			import Topdown, {Spritesheet} from "./renderers/topdownsprite.js"
+			import Controller from "./controller.js"
+			import {Unit} from "./player.js"
+			window.c = new Controller(new Map({
+				length: 12,
+				width: 12,
+				abundance: 1,
+				smoothIterations: 3
+			}), document.getElementById("screen"), Topdown, 64, new Spritesheet("./res/spritesheet.png", 32, {
+				"terrains.base.field": {
+					x: 0,
+					y: 0,
+				},
+				"terrains.base.forest": {
+					x: 1,
+					y: 0,
+				},
+				"terrains.base.mountain": {
+					x: 2,
+					y: 0,
+				},
+				"buildings.base.city": {
+					x: 0,
+					y: 1,
+				},
+				"units.base.warrior": {
+					x: 2,
+					y: 1,
+				},
+				"availablemove": {
+					x: 0,
+					y: 2,
+				},
+				"availableattack": {
+					x: 1,
+					y: 2,
+				},
+			}))
+			c.map.addPlayers([
+				{
+					name: "Player 1",
+					style: "orange"
+				},
+				{
+					name: "Player 2",
+					style: "yellow"		
+				},
+				{
+					name: "Player 3",
+					style: "olive"
+				},
+				{
+					name: "Player 4",
+					style: "red"
+				}
+			]);
+			c.map.createOcean();
+			c.renderer.render(c.map);
+			c.start();
+			displayPlayer();
+			document.getElementById("turnsleft").innerText = `${c.turnsLeft} turns`;
+			function canvasClick(event) {
+				debugger;
+				var canvas = document.getElementById("screen")
+				var rect = canvas.getBoundingClientRect();
+				var x = Math.floor((event.clientX - rect.left) * c.map.length / canvas.width);
+				var y = Math.floor((event.clientY - rect.top) * c.map.width / canvas.height);
+				c.handleClick(x, y);
+				displaySelected();
+			}
+			function displaySelected() {
+				var selected = document.getElementById("selected")
+				document.getElementById("capture").disabled = true;
+				document.getElementById("createunit").disabled = true;
+				switch(c.selected.constructor) {
+					case Unit:					
+						selected.innerText = c.selected.name;
+						selected.style.color = c.selectedParent.style;
+						if (c.canCapture(c.selected)) {
+							document.getElementById("capture").disabled = false;
+						}
+						break;
+					case Building:
+						selected.innerText = c.selected.type.name;
+						selected.style.color = (c.selectedParent !== undefined) ? c.selected.owner.style : "white";
+						if (c.canCreateUnit()) {
+							document.getElementById("createunit").disabled = false;
+						}
+						break;
+					case TileResult:
+						selected.innerText = c.selected.tile.terrain.name;
+						selected.style.color = (c.selectedParent !== undefined) ? c.selectedParent.style : "white";
+						break;
+				}
+			}
+			function displayPlayer() {
+				document.getElementById("currentplayer").innerText = `${c.currentPlayer.name} - ${c.currentPlayer.resources} Resources`;
+				document.getElementById("currentplayer").style.color = c.currentPlayer.style;
+				document.getElementById("selected").innerText = "None Selected"
+				document.getElementById("selected").style.color = "white";
+			}
+			function nextTurn() {
+				c.endTurn();
+				document.getElementById("turnsleft").innerText = `${c.turnsLeft} turns`;
+				if (c.turnsLeft > 0) {
+					displayPlayer();
+				} else {
+					document.getElementById("currentplayer").innerText = "";
+					document.getElementById("nextturn").style.visibility = "hidden";
+					var winner = c.map.players.reduce((winner, player) => c.map.cityCount(player) > c.map.cityCount(player) ? player : winner);
+					document.getElementById("turnsleft").innerText = `Game ended! ${winner.name} is the winner!`;
+					document.getElementById("turnsleft").style.color = winner.style;
+					document.getElementById("selected").innerText = "";
+				}
+			}
+			document.getElementById("capture").addEventListener('click', (ev) => {c.capture(); ev.srcElement.disabled = true;}, false);
+			document.getElementById("createunit").addEventListener('click', (ev) => {c.createUnit(); ev.srcElement.disabled = true;displaySelected()}, false);
+			document.getElementById("nextturn").addEventListener('click', nextTurn, false);
+			document.getElementById("screen").addEventListener('click', canvasClick, false);
+			document.getElementById("capture").disabled = true;
+			document.getElementById("createunit").disabled = true;
+		</script>
+	</head>
+	<body style="background-color:#202020; color:white">
+		<div style="margin:auto; display: flex">
+			<div>
+				<canvas style="border-radius: 30px" id="screen" width="768" height="768" onclick=""></canvas>
+			</div>
+			<div style="margin-left:10px">
+			<h1>Clonytopia</h1>
+			<h2 id="turnsleft"></h2>
+			<h2 id="currentplayer"></h2>
+			<h2 id="selected">None selected</h2>
+			<button id="createunit">New Unit</button>
+			<button id="capture">Capture</button>
+			<button id="nextturn">End Turn</button>	
+			<h2>
+				Guide
+			</h2>
+			<ul>
+				<li>
+				The player with the most cities at the end of 20 turns win.
+				</li>
+				<li>
+					To select something, click on it.
+					<ul>
+						<li>
+							If what you are looking for is under something else (like a building under a unit), click it again, and so on.
+						</li>
+					</ul>
+				</li>
+				<li>
+				If a unit is on a city that is not yours, you can capture it.
+				</li>
+				<li>
+				If you selected a unit, blue circles denoting the places that unit can move to will be shown. Red circles denote possible attacks.
+				</li>
+				<li>
+				Once a unit has moved, it cannot move for the rest of the turn.
+				</li>
+				<li>
+				You can create new units by selecting a city first. Each units cost 2 resources
+				</li>
+				<li>
+				At the start of each turn, each player receives the resources the same amount of cities they have.
+				</li>
+			</ul>
+			</div>
+		</div>
+	</body>
+</html>
