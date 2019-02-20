@@ -59,67 +59,68 @@ export default class Controller {
 		);
 		if (selectedMove !== undefined) {
 			this.moveUnit(this.selected, this.selectedParent, selectedMove);
-		} else if (selectedAttack !== undefined) {
-			debugger;
-			var target = [].concat(...this.map.players.map((player) =>
+			return;
+		}
+		if (selectedAttack !== undefined) {
+			var target = this.map.players.flatMap((player) =>
 				player.units
-			)).find((unit) =>
+			).find((unit) =>
 				unit.x == selectedAttack.x && unit.y == selectedAttack.y
 			);
 			if (target !== undefined) {
 				this.attackUnit(this.selected, target);
 			}
-		} else {
-			this.redrawOverlays();
-			this.selectedParent = this.map.players.find((player) => {
-				return (this.selected = player.units.find((unit) => 
-					unit.x == x && unit.y == y
-				)) !== undefined;
-			});
-			if ((this.previousX == x && this.previousY == y) || this.selected === undefined) {
-				if (this.previousX == x && this.previousY == y) {
-					this.sameClicks++;
-				} else {
-					this.sameClicks = 0;
-				}
-				var tile = new TileResult(x, y, this.map.tiles[x][y]);
-				if (tile.tile.hasBuilding) {
-					this.selected = tile.tile.building;
-					this.selectedParent = tile;
-				} else {
-					this.selected = tile;
-				}
-				if (this.sameClicks > 1) {
-					this.selected = tile;
-					this.selectedParent = this.map.continents.find((continent) => {
-						return continent.tiles.find((t) =>
-							t.x == this.selected.x && t.y == this.selected.y
-						) !== undefined
-					});
-				} else {
-					if (tile.tile.hasBuilding) {
-						this.selectedParent = tile;
-					} else {
-						this.selectedParent = this.map.continents.find((continent) => {
-							return continent.tiles.find((t) =>
-								t.x == this.selected.x && t.y == this.selected.y
-							) !== undefined
-						});	
-					}
-				}
+			return;
+		}
+		this.redrawOverlays();
+		this.selectedParent = this.map.players.find((player) =>
+			(this.selected = player.units.find((unit) =>
+				unit.x == x && unit.y == y
+			)) !== undefined
+		);
+		if ((this.previousX == x && this.previousY == y) || this.selected === undefined) {
+			if (this.previousX == x && this.previousY == y) {
+				this.sameClicks++;
 			} else {
-				if (this.selectedParent == this.currentPlayer && this.selected instanceof Unit && !this.selected.moved) {
-					this.attacksShown = this.map.getRange(this.selected.x, this.selected.y, this.selected.range).filter((near) =>
-						this.isUnitAt(near.x, near.y, this.currentPlayer)
-					);
-					this.movesShown = this.map.getRange(this.selected.x, this.selected.y, this.selected.movement).filter((near) =>
-						!this.isUnitAt(near.x, near.y)
-					);
-					this.renderer.overlayTiles(this.movesShown, "availablemove");
-					this.renderer.overlayTiles(this.attacksShown, "availableattack");
-				}
 				this.sameClicks = 0;
 			}
+			var tile = new TileResult(x, y, this.map.tiles[x][y]);
+			if (tile.tile.hasBuilding) {
+				this.selected = tile.tile.building;
+				this.selectedParent = tile;
+			} else {
+				this.selected = tile;
+			}
+			if (this.sameClicks > 1) {
+				this.selected = tile;
+				this.selectedParent = this.map.continents.find((continent) =>
+					continent.tiles.find((t) =>
+						t.x == this.selected.x && t.y == this.selected.y
+					) !== undefined
+				);
+			} else {
+				if (tile.tile.hasBuilding) {
+					this.selectedParent = tile;
+				} else {
+					this.selectedParent = this.map.continents.find((continent) =>
+						continent.tiles.find((t) =>
+							t.x == this.selected.x && t.y == this.selected.y
+						) !== undefined
+					);	
+				}
+			}
+		} else {
+			if (this.selectedParent == this.currentPlayer && this.selected instanceof Unit && !this.selected.moved) {
+				this.attacksShown = this.map.getRange(this.selected.x, this.selected.y, this.selected.range).filter((near) =>
+					this.isUnitAt(near.x, near.y, this.currentPlayer)
+				);
+				this.movesShown = this.map.getRange(this.selected.x, this.selected.y, this.selected.movement).filter((near) =>
+					!this.isUnitAt(near.x, near.y)
+				);
+				this.renderer.overlayTiles(this.movesShown, "availablemove");
+				this.renderer.overlayTiles(this.attacksShown, "availableattack");
+			}
+			this.sameClicks = 0;
 		}
 		
 		this.previousX = x;
@@ -127,7 +128,12 @@ export default class Controller {
 	}
 	
 	canCapture(unit) {
-		return this.selected instanceof Unit && this.selectedParent instanceof Player && !unit.moved && this.currentPlayer.units.includes(unit) && this.map.tiles[unit.x][unit.y].hasBuilding && this.map.tiles[unit.x][unit.y].building.type.id == "buildings.base.city" && this.map.tiles[unit.x][unit.y].building.owner != this.currentPlayer;
+		return this.selected instanceof Unit &&
+			this.selectedParent instanceof Player &&
+			!unit.moved && this.currentPlayer.units.includes(unit) &&
+			this.map.tiles[unit.x][unit.y].hasBuilding &&
+			this.map.tiles[unit.x][unit.y].building.type.id == "buildings.base.city" &&
+			this.map.tiles[unit.x][unit.y].building.owner != this.currentPlayer;
 	}
 	
 	capture() {
@@ -171,7 +177,7 @@ export default class Controller {
 		this.currentPlayer = this.map.players[idx];
 		if (idx == 0) {
 			this.turnsLeft--;
-			for (player of this.map.players) {
+			for (var player of this.map.players) {
 				player.resources += c.map.cityCount(player);
 			}
 		}

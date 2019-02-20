@@ -203,7 +203,10 @@ export default class Map {
 		for (var relativeX = -Math.floor(radius); relativeX <= radius; relativeX++) {
 			if (x + relativeX < 0 || x + relativeX >= this.width) continue;
 			for (var relativeY = -Math.floor(radius); relativeY <= radius; relativeY++) {
-				if (y + relativeY < 0 || y + relativeY >= this.height) continue; else region.push((retTileResult) ? new TileResult(x+relativeX, y+relativeY, this.tiles[x+relativeX][y+relativeY]) : this.tiles[x+relativeX][y+relativeY]);
+				if (y + relativeY < 0 || y + relativeY >= this.height)
+					continue;
+				else
+					region.push((retTileResult) ? new TileResult(x+relativeX, y+relativeY, this.tiles[x+relativeX][y+relativeY]) : this.tiles[x+relativeX][y+relativeY]);
 			}
 		}
 		return region;
@@ -325,17 +328,15 @@ export default class Map {
 					for (var neighbour of this.neighbours(x, y)) {
 						if (!visited.contains(neighbour)) {
 							visited.push(neighbour);
-							if (Math.random() < this.richness && neighbour !== this.tiles[x][y] && !neighbour.resource) {
+							if (Math.random() < this.richness && neighbour !== this.tiles[x][y] && !neighbour.resource)
 								addResource(x, y);
-							}
 						}
 					}
 					for (var near of region(x, y, 2)) {
 						if (!visited.contains(near)) {
 							visited.push(near);
-							if (Math.random() < this.richness / 3 && neighbour !== this.tiles[x][y] && !neighbour.resource) {
+							if (Math.random() < this.richness / 3 && neighbour !== this.tiles[x][y] && !neighbour.resource)
 								addResource(x, y);
-							}
 						}
 					}
 				}
@@ -503,9 +504,9 @@ export default class Map {
 		return validMoves;
 	}
 	cityCount(player) {
-		return this.map.reduce((count, column) => 
+		return this.tiles.reduce((count, column) => 
 			count + column.reduce((columnCount, tile) => 
-				columnCount + (this.tiles[x][y].hasBuilding && this.tiles[x][y].building.owner == player)
+				columnCount + (tile.hasBuilding && tile.building.owner == player)
 			, 0)
 		, 0);
 	}
