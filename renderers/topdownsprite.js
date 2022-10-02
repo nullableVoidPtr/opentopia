@@ -40,21 +40,16 @@ export default class Topdown extends Renderer {
 	}
 	renderSprite(sprite, x, y, style = undefined, operation="source-over", drawOver=false) {
 		var oldOperation = this.context.globalCompositeOperation;
-		if (operation == "source-over") {
-			this.context.globalCompositeOperation = operation;
+		if (operation != "source-over" && !drawOver) {
+			this.context.globalCompositeOperation = "destination-out";
 			this.context.drawImage(...sprite.drawImageParams, x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
-		} else {
-			if (!drawOver) {
-				this.context.globalCompositeOperation = "destination-out";
-				this.context.drawImage(...sprite.drawImageParams, x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
-				this.context.fillStyle = style;
-				this.context.globalCompositeOperation = "destination-over";
-				this.context.fillRect(x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
-			}
-			this.context.globalCompositeOperation = operation;
-			this.context.drawImage(...sprite.drawImageParams, x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
+			this.context.fillStyle = style;
+			this.context.globalCompositeOperation = "destination-over";
+			this.context.fillRect(x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
 		}
-	this.context.globalCompositeOperation = oldOperation;
+		this.context.globalCompositeOperation = operation;
+		this.context.drawImage(...sprite.drawImageParams, x * this.squareSize, y * this.squareSize, this.squareSize, this.squareSize);
+		this.context.globalCompositeOperation = oldOperation;
 	}
 	renderUnit(unit, style) {
 		var sprite = this.spritesheet.getSprite(unit.id);
@@ -85,9 +80,7 @@ export default class Topdown extends Renderer {
 		if (sprite !== undefined) this.renderSprite(sprite, tileresult.x, tileresult.y, undefined, "luminosity");
 	}
 	overlayTile(tileresult, spriteid) {
-		debugger;
 		this.context.globalAlpha = 0.5;
-		debugger;
 		var sprite = this.spritesheet.getSprite(spriteid);
 		this.renderSprite(sprite, tileresult.x, tileresult.y);
 		this.context.globalAlpha = 1.0;
